@@ -17,3 +17,9 @@ Repositorio del proyecto del curso sobre TanStack Query con React
 - TailwindCSS
 - React Router 6+
 - React Icons
+
+### Instalar React Query
+npm i @tanstack/react-query
+npm i -D @tanstack/eslint-plugin-query
+### Devtools
+npm i @tanstack/react-query-devtools
