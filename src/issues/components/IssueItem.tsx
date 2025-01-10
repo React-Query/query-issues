@@ -2,6 +2,8 @@ import { FiInfo, FiMessageSquare, FiCheckCircle } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { Issues, State } from "../interfaces";
 import { FC } from "react";
+import { QueryClient, useQueryClient } from "@tanstack/react-query";
+import { getIssue, getIssueComments } from "../actions";
 
 interface Props {
   issue: Issues;
@@ -9,8 +11,35 @@ interface Props {
 export const IssueItem: FC<Props> = ({ issue }) => {
   const navigate = useNavigate();
 
+  const getQueryClient = useQueryClient(); //Va al context para buscar todo el queryClient
+  const prefetchingData = () => {
+    //console.log(`Precargando datos`)
+    getQueryClient.prefetchQuery({
+      queryKey: ["issues", issue.number], //tiene que ser el mismo del useIssue
+      queryFn: () => getIssue(issue.number),
+      staleTime: 60000, //para que no haga fetch a cada rato cuando pase el mouse, va a mantener los datos por 60 segundos.
+    });
+
+    getQueryClient.prefetchQuery({
+      queryKey: ["issues", issue.number, "comments"], //tiene que ser el mismo del useIssue
+      queryFn: () => getIssueComments(issue.number),
+      staleTime: 60000, //para que no haga fetch a cada rato cuando pase el mouse, va a mantener los datos por 60 segundos.
+    });
+  };
+
+  const presetData = () => {
+    //grabamos en el cache ["issues", issue.number] para que sea mas rapdio aun en logar de hacer un prefetch
+    //esto hara que el el hook useIssue(+issueNumber) dentro del componente IssueView ejecute el query pero ya los datos estan grabados en el cache con la queryKey ["issues", issue.number] y muestra directamente los dato y ya no hace la consulta http al api.
+    getQueryClient.setQueryData(["issues", issue.number], issue, {
+      updatedAt: Date.now() + (1000 * 60),
+    });
+  };
   return (
-    <div className="animate-fadeIn flex items-center px-2 py-3 mb-5 border rounded-md bg-slate-900 hover:bg-slate-800">
+    <div
+      //onMouseEnter={prefetchingData}
+      onMouseEnter={presetData}
+      className="animate-fadeIn flex items-center px-2 py-3 mb-5 border rounded-md bg-slate-900 hover:bg-slate-800"
+    >
       {
         //issue.state es un tipo de dato enum por ende hay que compararlo con el enum
         issue.state === State.Close ? (
