@@ -4,6 +4,7 @@ import { Issues, State } from "../interfaces";
 import { FC } from "react";
 import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import { getIssue, getIssueComments } from "../actions";
+import { timeSince } from "../../helpers";
 
 interface Props {
   issue: Issues;
@@ -31,7 +32,7 @@ export const IssueItem: FC<Props> = ({ issue }) => {
     //grabamos en el cache ["issues", issue.number] para que sea mas rapdio aun en logar de hacer un prefetch
     //esto hara que el el hook useIssue(+issueNumber) dentro del componente IssueView ejecute el query pero ya los datos estan grabados en el cache con la queryKey ["issues", issue.number] y muestra directamente los dato y ya no hace la consulta http al api.
     getQueryClient.setQueryData(["issues", issue.number], issue, {
-      updatedAt: Date.now() + (1000 * 60),
+      updatedAt: Date.now() + 1000 * 60,
     });
   };
   return (
@@ -59,9 +60,20 @@ export const IssueItem: FC<Props> = ({ issue }) => {
           {issue.title}
         </a>
         <span className="text-gray-500">
-          {/* Todo */}#{issue.number} opened 2 days ago by{" "}
+          {/* Todo */}#{issue.number} opened {timeSince(issue.created_at)} ago by{" "}
           <span className="font-bold">{issue.user.login}</span>
         </span>
+        <div className="flex flex-wrap">
+          {issue.labels.map((label) => (
+            <span
+              key={label.id}
+              className="px-2 py-1 mr-2 text-xs text-white rounded-md"
+              style={{ border: `1px solid #${label.color}` }}
+            >
+              {label.name}
+            </span>
+          ))}
+        </div>
       </div>
 
       <img
